@@ -11,7 +11,6 @@ import org.apache.http.impl.client.HttpClients;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -38,6 +37,7 @@ public class HttpMethodHandler {
 
         String result = null;
         if(RequestMethod.GET == method){
+            // 拼接url参数
             StringBuilder urlBuilder = new StringBuilder(realUrl);
             int count = 0;
             for(Map.Entry<Integer, String> entry : indexNameMap.entrySet()){
@@ -55,12 +55,16 @@ public class HttpMethodHandler {
                 urlBuilder.append(name+"="+ String.valueOf(args[index]));
             }
             realUrl = urlBuilder.toString();
-
             System.out.println("url:" + realUrl);
 
+            // 执行请求
             try {
-                CloseableHttpClient httpClient = HttpClients.custom().setSSLContext(createIgnoreVerifySSL()).build();
-//                CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpClient httpClient = null;
+                if(httpRequestContext.isSsl()){
+                    httpClient = HttpClients.custom().setSSLContext(createIgnoreVerifySSL()).build();
+                }else {
+                    httpClient = HttpClients.createDefault();
+                }
                 HttpGet httpGet = new HttpGet(realUrl);
                 for(Map.Entry<String, String> entry : httpRequestContext.getHeaders().entrySet()){
                     httpGet.addHeader(entry.getKey(), entry.getValue());

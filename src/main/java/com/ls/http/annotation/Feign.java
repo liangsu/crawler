@@ -9,5 +9,7 @@ public @interface Feign {
 
     String url() default "";
 
+    boolean ssl() default false;
+
     Header[] headers() default {};
 }

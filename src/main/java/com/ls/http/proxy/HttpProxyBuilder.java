@@ -33,6 +33,10 @@ public class HttpProxyBuilder {
             }
         }
 
+        // ssl
+        boolean ssl = feign.ssl();
+        httpRequestContext.setSsl(ssl);
+
         // 解析方法
         Map<Method, HttpMethodHandler> methodMap = new HashMap<>();
         Method[] methods = source.getDeclaredMethods();
@@ -48,6 +52,13 @@ public class HttpProxyBuilder {
         return (T) Proxy.newProxyInstance(HttpProxy.class.getClassLoader(), itfs, httpProxy);
     }
 
+    /**
+     * 解析方法
+     * @param method
+     * @param requestMapping
+     * @param urlPrefix
+     * @return
+     */
     public static HttpMethodHandler resoveMethod(Method method, RequestMapping requestMapping, String urlPrefix){
         HttpMethodHandler httpMethodHandler = new HttpMethodHandler();
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HttpRequestContext {
+    private boolean ssl;
     private Map<String, String> headers = new HashMap<>();
 
 
@@ -15,5 +16,11 @@ public class HttpRequestContext {
     }
     public void addHeader(String key, String value){
         headers.put(key, value);
+    }
+    public boolean isSsl() {
+        return ssl;
+    }
+    public void setSsl(boolean ssl) {
+        this.ssl = ssl;
     }
 }
