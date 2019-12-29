@@ -15,37 +15,34 @@ import org.apache.http.util.EntityUtils;
 
 public class HttpUtils {
 
-	public static String get(String url) throws ClientProtocolException, IOException {
+	public static String get(String url) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet httpGet = new HttpGet(url);
 //        httpGet.addHeader("Accept", "application/json");
         CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+        return resovleResponse2String(httpResponse);
+    }
+
+    public static String getSSL(String url) throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(url);
+//        httpGet.addHeader("Accept", "application/json");
+        CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+        return resovleResponse2String(httpResponse);
+    }
+
+    public static String resovleResponse2String(CloseableHttpResponse httpResponse) throws IOException {
         try {
             HttpEntity entity = httpResponse.getEntity();
             String result = EntityUtils.toString(entity);
-            System.out.println(result);
+//            System.out.println(result);
             return result;
         } finally {
             httpResponse.close();
         }
     }
 
-    public static String getSSL(String url) throws ClientProtocolException, IOException {
-        CloseableHttpClient httpClient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet(url);
-//        httpGet.addHeader("Accept", "application/json");
-        CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
-        try {
-            HttpEntity entity = httpResponse.getEntity();
-            String result = EntityUtils.toString(entity);
-            System.out.println(result);
-            return result;
-        } finally {
-            httpResponse.close();
-        }
-    }
-
-	public static String postJSON(String url, String jsonBody) throws ClientProtocolException, IOException {
+	public static String postJSON(String url, String jsonBody) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
         HttpPost httpPost = new HttpPost(url);
@@ -53,35 +50,13 @@ public class HttpUtils {
         httpPost.setEntity(new StringEntity(jsonBody));
 
         CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
-        try {
-            HttpEntity entity = httpResponse.getEntity();
-            String result = null;
-            if(entity != null){
-            	result = EntityUtils.toString(entity);
-            }
-//            System.out.println(result);
-            return result;
-        } finally {
-            httpResponse.close();
-        }
+        return resovleResponse2String(httpResponse);
     }
 
 	public static String put(String url) throws ClientProtocolException, IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
-
         HttpPut httpPut = new HttpPut(url);
-
         CloseableHttpResponse httpResponse = httpClient.execute(httpPut);
-        try {
-            HttpEntity entity = httpResponse.getEntity();
-            String result = null;
-            if(entity != null){
-            	result = EntityUtils.toString(entity);
-            }
-//            System.out.println(result);
-            return result;
-        } finally {
-            httpResponse.close();
-        }
+        return resovleResponse2String(httpResponse);
     }
 }
