@@ -41,13 +41,12 @@ public class HttpProxyBuilder {
         Map<Method, HttpMethodHandler> methodMap = new HashMap<>();
         Method[] methods = source.getDeclaredMethods();
         for (Method method : methods) {
-            RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-            HttpMethodHandler httpMethodHandler = resoveMethod(method, requestMapping, url);
+            MethodMetadata methodMetadata = resoveMethod(method, url); // 解析方法
+            HttpMethodHandler httpMethodHandler = new HttpMethodHandler(methodMetadata);
             methodMap.put(method, httpMethodHandler);
         }
 
         HttpProxy httpProxy = new HttpProxy(methodMap, httpRequestContext);
-
 
         return (T) Proxy.newProxyInstance(HttpProxy.class.getClassLoader(), itfs, httpProxy);
     }
@@ -55,23 +54,26 @@ public class HttpProxyBuilder {
     /**
      * 解析方法
      * @param method
-     * @param requestMapping
      * @param urlPrefix
      * @return
      */
-    public static HttpMethodHandler resoveMethod(Method method, RequestMapping requestMapping, String urlPrefix){
-        HttpMethodHandler httpMethodHandler = new HttpMethodHandler();
+    public static MethodMetadata resoveMethod(Method method, String urlPrefix){
+        MethodMetadata methodMetadata = new MethodMetadata();
 
+        // url
+        RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
         String value = requestMapping.value();
         String url = urlPrefix + value;
-        httpMethodHandler.setUrl(url);
+        methodMetadata.setUrl(url);
 
+        // 解析url上的参数
+        methodMetadata.setUrlParams(resovleURLParamterNames(url));
+
+        // 请求类型：get、post etc.
         RequestMethod requestMethod = requestMapping.method();
-        httpMethodHandler.setMethod(requestMethod);
+        methodMetadata.setMethod(requestMethod);
 
         // 解析参数名
-        Map<Integer, String> indexNameMap = new HashMap<>();
-        Map<String, Integer> nameIndexMap = new HashMap<>();
         Parameter[] parameters = method.getParameters();
         Annotation[][] parameterAnnotations = method.getParameterAnnotations();
         for (int i = 0; parameters != null && i < parameters.length; i++) {
@@ -81,33 +83,26 @@ public class HttpProxyBuilder {
             if(parameter.isNamePresent()){
                 name = parameter.getName();
             }
-
             RequestParam requestParam = findParamterAnnotation(parameterAnnotations, i);
             if(requestParam != null){
                 name = requestParam.value();
             }
-            System.out.println(name + " --- " + parameter.getType());
+            methodMetadata.getIndexNameMap().put(i, name); // 增加参数
 
-            indexNameMap.put(i, name);
-            nameIndexMap.put(name, i);
-        }
-        httpMethodHandler.setIndexNameMap(indexNameMap);
-
-        // 解析url上的参数
-        Map<Integer, String> urlIndexNameMap = new HashMap<>();
-        List<String> urlParamterNames = resovleURLParamterNames(url);
-        if(urlParamterNames != null && urlParamterNames.size() > 0){
-            for (String urlParamterName : urlParamterNames) {
-                Integer index = nameIndexMap.get(urlParamterName);
-                urlIndexNameMap.put(index, urlParamterName);
+            // 表单参数
+            if(!methodMetadata.getUrlParams().contains(name)){
+                methodMetadata.getFormParams().add(i, name);
             }
         }
-        httpMethodHandler.setUrlIndexNameMap(urlIndexNameMap);
 
-
-        return httpMethodHandler;
+        return methodMetadata;
     }
 
+    /**
+     * 解析url上面的参数
+     * @param url
+     * @return
+     */
     private static List<String> resovleURLParamterNames(String url) {
         List<String> names = new ArrayList<>();
 
@@ -141,10 +136,13 @@ public class HttpProxyBuilder {
     }
 
     public static void main(String[] args) {
-        BoxnovelBaidu story = createProxy(BoxnovelBaidu.class);
-//        String reslut = story.getDirectories("4315647406", 1, "asc", "");
-        String reslut = story.getContent("4315647406", "10147867");
-        System.out.println(reslut);
+//        BoxnovelBaidu baidu = createProxy(BoxnovelBaidu.class);
+////        String reslut = story.getDirectories("4315647406", 1, "asc", "");
+//        String reslut = baidu.getContent("4315647406", "10147867");
+//        System.out.println(reslut);
+
+        Story story = createProxy(Story.class);
+        System.out.println(story.get("1", 1, 1, 1));
     }
 
 }
