@@ -14,80 +14,96 @@ import javax.net.ssl.X509TrustManager;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class HttpMethodHandler {
-    private String url;
-    private Map<Integer, String> urlIndexNameMap;
-    private Map<Integer, String> indexNameMap;// key:name, value: parameter index
+    private MethodMetadata methodMetadata;
 
-    private RequestMethod method;
-    private Class[] parameterTypes;
+    public HttpMethodHandler(MethodMetadata methodMetadata) {
+        this.methodMetadata = methodMetadata;
+    }
 
     public Object request(Object[] args, HttpRequestContext httpRequestContext){
+
+        // 表单值
+        Map<String, String> formData = new HashMap<>();
+        Map<Integer, String> indexNameMap = methodMetadata.getIndexNameMap();
+        for (int i = 0; args != null && i < args.length; i++) {
+            String name = indexNameMap.get(i);
+            Object value = args[i];
+            if(value != null){
+                formData.put(name, String.valueOf(args[i]));
+            }else{
+                formData.put(name, "");
+            }
+        }
+
         // 解析url
-        String realUrl = this.url;
-        if(urlIndexNameMap != null && urlIndexNameMap.size() > 0){
-            for(Map.Entry<Integer, String> entry : urlIndexNameMap.entrySet()){
-                int index = entry.getKey();
-                String name = entry.getValue();
-                realUrl = realUrl.replaceAll("\\{" + name + "\\}", String.valueOf(args[index]));
+        String realUrl = methodMetadata.getUrl();
+        List<String> urlParams = methodMetadata.getUrlParams();
+        if(urlParams != null && urlParams.size() > 0){
+            for (String name : urlParams) {
+                String value = formData.get(name);
+                formData.remove(name); // 从form中移除
+                realUrl = realUrl.replaceAll("\\{" + name + "\\}", value);
             }
         }
 
         String result = null;
-        if(RequestMethod.GET == method){
-            // 拼接url参数
-            StringBuilder urlBuilder = new StringBuilder(realUrl);
-            int count = 0;
-            for(Map.Entry<Integer, String> entry : indexNameMap.entrySet()){
-                int index = entry.getKey();
-                String name = entry.getValue();
-                if(urlIndexNameMap.containsKey(index)){
-                    continue;
-                }
-                if(count == 0){
-                    urlBuilder.append("?");
-                    count++;
-                }else{
-                    urlBuilder.append("&");
-                }
-                urlBuilder.append(name+"="+ String.valueOf(args[index]));
-            }
-            realUrl = urlBuilder.toString();
-            System.out.println("url:" + realUrl);
+        if(RequestMethod.GET == methodMetadata.getMethod()){
+            result = executeGet(httpRequestContext, formData, realUrl);
 
-            // 执行请求
-            try {
-                CloseableHttpClient httpClient = null;
-                if(httpRequestContext.isSsl()){
-                    httpClient = HttpClients.custom().setSSLContext(createIgnoreVerifySSL()).build();
-                }else {
-                    httpClient = HttpClients.createDefault();
-                }
-                HttpGet httpGet = new HttpGet(realUrl);
-                for(Map.Entry<String, String> entry : httpRequestContext.getHeaders().entrySet()){
-                    httpGet.addHeader(entry.getKey(), entry.getValue());
-                }
-                CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
-                result = HttpUtils.resovleResponse2String(httpResponse);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }else if(RequestMethod.POST == method){
-
+        }else if(RequestMethod.POST == methodMetadata.getMethod()){
 
 
         }
 
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
-        System.out.println("");
+        System.out.println("\n\n\n\n\n");
         System.out.println(result);
         return  result;
     }
+
+    private String executeGet(HttpRequestContext httpRequestContext, Map<String, String> formData, String realUrl) {
+        // 拼接url参数
+        StringBuilder urlBuilder = new StringBuilder(realUrl);
+        int count = 0;
+        for(Map.Entry<String, String> entry : formData.entrySet()){
+            String name = entry.getKey();
+            String value = entry.getValue();
+            if(count == 0){
+                urlBuilder.append("?");
+                count++;
+            }else{
+                urlBuilder.append("&");
+            }
+            urlBuilder.append(name+"="+ value);
+        }
+        realUrl = urlBuilder.toString();
+
+        // 执行请求
+        try {
+            CloseableHttpClient httpClient = null;
+            if(httpRequestContext.isSsl()){
+                httpClient = HttpClients.custom().setSSLContext(createIgnoreVerifySSL()).build();
+            }else {
+                httpClient = HttpClients.createDefault();
+            }
+            HttpGet httpGet = new HttpGet(realUrl);
+            for(Map.Entry<String, String> entry : httpRequestContext.getHeaders().entrySet()){
+                httpGet.addHeader(entry.getKey(), entry.getValue());
+            }
+            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+            return HttpUtils.resovleResponse2String(httpResponse);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
 
     public static SSLContext createIgnoreVerifySSL() throws NoSuchAlgorithmException, KeyManagementException {
         SSLContext sc = SSLContext.getInstance("SSLv3");
@@ -113,40 +129,4 @@ public class HttpMethodHandler {
     }
 
 
-    public Map<Integer, String> getUrlIndexNameMap() {
-        return urlIndexNameMap;
-    }
-
-    public void setUrlIndexNameMap(Map<Integer, String> urlIndexNameMap) {
-        this.urlIndexNameMap = urlIndexNameMap;
-    }
-
-    public Map<Integer, String> getIndexNameMap() {
-        return indexNameMap;
-    }
-
-    public void setIndexNameMap(Map<Integer, String> indexNameMap) {
-        this.indexNameMap = indexNameMap;
-    }
-
-    public Class[] getParameterTypes() {
-        return parameterTypes;
-    }
-
-    public void setParameterTypes(Class[] parameterTypes) {
-        this.parameterTypes = parameterTypes;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-    public void setUrl(String url) {
-        this.url = url;
-    }
-    public RequestMethod getMethod() {
-        return method;
-    }
-    public void setMethod(RequestMethod method) {
-        this.method = method;
-    }
 }
