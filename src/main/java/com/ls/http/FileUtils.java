@@ -1,6 +1,8 @@
 package com.ls.http;
 
-import java.io.File;
+import org.apache.commons.io.IOUtils;
+
+import java.io.*;
 
 public class FileUtils {
 
@@ -9,6 +11,31 @@ public class FileUtils {
         if(!file.exists()){
             file.mkdirs();
         }
+    }
+
+    public static void writeToFile(String content, String path){
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(path));
+            writer.write(content);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String readFromFile(String path){
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(path));
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            IOUtils.copy(reader, bos);
+            return bos.toString();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
