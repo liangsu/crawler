@@ -38,4 +38,11 @@ public class FileUtils {
         return null;
     }
 
+    public static byte[] readFileToByteArray(String filePath) throws Exception {
+        FileInputStream fis = new FileInputStream(filePath);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        IOUtils.copy(fis, bos);
+        return bos.toByteArray();
+    }
+
 }

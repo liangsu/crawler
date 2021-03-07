@@ -17,7 +17,7 @@ import java.util.concurrent.*;
 
 public class PornHubCrawer {
 
-    private static Logger logger = LoggerFactory.getLogger(Ting55Crawler.class);
+    private static Logger logger = LoggerFactory.getLogger(PornHubCrawer.class);
 
     ExecutorService executorService = new ThreadPoolExecutor(40, 80,
             60L, TimeUnit.SECONDS,
@@ -61,6 +61,12 @@ public class PornHubCrawer {
         }
         if(m == null){
             m = engine.get("media_6");
+        }
+        if(m == null){
+            m = engine.get("media_5");
+        }
+        if(m == null){
+            m = engine.get("media_4");
         }
 
         String m3u8URL = m.toString();

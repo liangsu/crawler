@@ -123,4 +123,33 @@ public class HttpClientUtil {
         }
     }
 
+    // ----------------------------  后来新增的方法
+
+    public static byte[] get(String url, Map<String, String> headers, String charset) {
+        CloseableHttpClient httpclient = HttpClients.createDefault();
+        try {
+            HttpClientContext context = HttpClientContext.create();
+            HttpGet httpget = new HttpGet(url);
+            if(headers != null) {
+                for(String key:headers.keySet()) {
+                    httpget.setHeader(key, headers.get(key));
+                }
+            }
+            CloseableHttpResponse response = httpclient.execute(httpget,context);
+            try {
+                return EntityUtils.toByteArray(response.getEntity());
+            } finally {
+                response.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                httpclient.close();
+            } catch (Exception e2) {
+                e2.printStackTrace();
+            }
+        }
+        return null;
+    }
 }
