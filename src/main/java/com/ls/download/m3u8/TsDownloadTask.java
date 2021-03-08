@@ -1,6 +1,9 @@
 package com.ls.download.m3u8;
 
 import com.ls.crawler.HttpClientUtil;
+import com.ls.download.AesUtils;
+import com.ls.http.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,6 +49,8 @@ class TsDownloadTask implements Runnable{
                         fos.flush();
                         fos.close();
                         success = true;
+
+                        afterDownload(data);
                     }
                 }
             }else{
@@ -70,5 +75,33 @@ class TsDownloadTask implements Runnable{
             mainTask.errorTask(this);
         }
     }
+
+
+    private void afterDownload(byte[] data) {
+        // 下载解码文件
+        M3u8Key key = m3u8Url.getKey();
+
+        byte[] aesKey = null;
+        if(StringUtils.equals(key.getMethod(), "AES-128")){
+            String filePath = saveDir + "key.txt";
+            File file = new File(filePath);
+            if(!file.exists()){
+                aesKey = HttpClientUtil.get(key.getUri(), null, "utf-8");
+                FileUtils.writeToFile(new String(aesKey), filePath);
+            }
+
+            // 解码
+            byte[] dd = AesUtils.decrypt(data, aesKey, new byte[16]);
+
+//            FileOutputStream fos = new FileOutputStream(file);
+//            fos.write(data);
+//            fos.flush();
+//            fos.close();
+
+        }else{
+
+        }
+    }
+
 
 }
