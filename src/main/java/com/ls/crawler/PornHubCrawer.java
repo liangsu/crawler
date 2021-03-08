@@ -1,8 +1,8 @@
 package com.ls.crawler;
 
+import com.ls.download.m3u8.M3u8Parser;
 import com.ls.http.FileUtils;
 import com.ls.http.VideoUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

@@ -30,6 +30,10 @@ public class Downloader {
         });
     }
 
+    public void submitTask(Runnable downloadTask){
+        executorService.execute(downloadTask);
+    }
+
     public String getDefaultSaveDirector() {
         return defaultSaveDirector;
     }

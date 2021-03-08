@@ -1,7 +1,7 @@
 package com.ls.download.ui;
 
 import com.ls.download.Downloader;
-import com.ls.download.M3u8DownloadTask;
+import com.ls.download.m3u8.M3u8DownloadTask;
 
 import javax.swing.*;
 import java.awt.*;
