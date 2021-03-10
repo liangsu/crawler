@@ -1,5 +1,9 @@
 package com.ls.download.m3u8;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * EXT-X-KEY：媒体片段可以进行加密，而该标签可以指定解密方法。
  */
@@ -27,6 +31,7 @@ public class M3u8Key {
      * AES-128 要求使用相同的 16字节 IV 值进行加密和解密。使用不同的 IV 值可以增强密码强度。
      * 如果属性列表出现 IV，则使用该值；如果未出现，则默认使用媒体片段序列号（即 EXT-X-MEDIA-SEQUENCE）作为其 IV 值，
      * 使用大端字节序，往左填充 0 直到序列号满足 16 字节（128 位）。
+     * 0x00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
      */
     private String iv;
 
@@ -38,6 +43,23 @@ public class M3u8Key {
     private String keyFormat;
 
     private String keyFormatVersions;
+
+    public byte[] getIvBytes(){
+        if(StringUtils.isBlank(iv)){
+            return null;
+        }
+
+        byte[] bytes = null;
+        if(iv.startsWith("0x")){
+            try {
+                bytes = Hex.decodeHex(iv.substring(2).toCharArray());
+            } catch (DecoderException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return bytes;
+    }
 
     public String getMethod() {
         return method;

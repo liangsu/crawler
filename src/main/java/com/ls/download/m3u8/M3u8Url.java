@@ -1,5 +1,7 @@
 package com.ls.download.m3u8;
 
+import java.util.Map;
+
 public class M3u8Url {
     private M3u8 m3u8;
     /**
@@ -18,43 +20,42 @@ public class M3u8Url {
      * ts文件url地址
      */
     private String url;
+    private Map<String, String> urlParams; // url字段上的参数
 
+    public Map<String, String> getUrlParams() {
+        return urlParams;
+    }
+
+    public void setUrlParams(Map<String, String> urlParams) {
+        this.urlParams = urlParams;
+    }
     public M3u8 getM3u8() {
         return m3u8;
     }
-
     public void setM3u8(M3u8 m3u8) {
         this.m3u8 = m3u8;
     }
-
     public float getDuration() {
         return duration;
     }
-
     public void setDuration(float duration) {
         this.duration = duration;
     }
-
     public String getTitle() {
         return title;
     }
-
     public void setTitle(String title) {
         this.title = title;
     }
-
     public M3u8Key getKey() {
         return key;
     }
-
     public void setKey(M3u8Key key) {
         this.key = key;
     }
-
     public String getUrl() {
         return url;
     }
-
     public void setUrl(String url) {
         this.url = url;
     }

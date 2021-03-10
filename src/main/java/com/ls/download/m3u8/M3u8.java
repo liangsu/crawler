@@ -48,6 +48,11 @@ public class M3u8 {
     private List<M3u8Url> subUrls = new ArrayList<>();
 
     private boolean hasSameTsName;
+    /**
+     * url参数中，参数的值不重复的key
+     * 如： aa.ts?name=xiaoming&age=30、 bb.ts?name=xiaoming&age=40 返回 age
+     */
+    private List<String> subUrlNotRepeatParamKey;
 
     public boolean isHasSameTsName() {
         return hasSameTsName;
@@ -91,5 +96,13 @@ public class M3u8 {
 
     public void setHasSameTsName(boolean hasSameTsName) {
         this.hasSameTsName = hasSameTsName;
+    }
+
+    public List<String> getSubUrlNotRepeatParamKey() {
+        return subUrlNotRepeatParamKey;
+    }
+
+    public void setSubUrlNotRepeatParamKey(List<String> subUrlNotRepeatParamKey) {
+        this.subUrlNotRepeatParamKey = subUrlNotRepeatParamKey;
     }
 }

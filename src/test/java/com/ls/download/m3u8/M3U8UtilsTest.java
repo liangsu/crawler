@@ -1,6 +1,7 @@
 package com.ls.download.m3u8;
 
 import com.ls.http.FileUtils;
+import org.apache.commons.codec.binary.Hex;
 import org.junit.jupiter.api.Test;
 
 class M3U8UtilsTest {
@@ -37,5 +38,11 @@ class M3U8UtilsTest {
         for(M3u8Url url : m3u8.getSubUrls()){
             System.out.println(M3u8Utils.getTsNameFromM3u8Url(url));
         }
+    }
+
+    @Test
+    void hex() throws Exception {
+        byte[] bytes = Hex.decodeHex("00000000000000000000000000000000".toCharArray());
+        System.out.println(bytes);
     }
 }

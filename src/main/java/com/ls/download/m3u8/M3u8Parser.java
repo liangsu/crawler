@@ -87,7 +87,51 @@ public class M3u8Parser {
         }catch (IOException e){
             logger.error("解析m3u8文件出错！", e);
         }
+
+        otherParse(m3u8);
+
         return m3u8;
+    }
+
+    /**
+     *
+     * @param m3u8
+     */
+    private static void otherParse(M3u8 m3u8) {
+        List<M3u8Url> urls = m3u8.getSubUrls();
+        if(urls == null || urls.size() <= 0){
+            return;
+        }
+
+        Map<String, String> map = new HashMap<>();
+        String repeat = "value-repeat";
+        for (int i = 0; i < urls.size(); i++) {
+            M3u8Url url = urls.get(i);
+            // 解析url上的参数
+            HashMap<String, String> params = URLUtils.getParams(url.getUrl());
+            url.setUrlParams(params);
+
+            // 判断参数是否重复
+            for(Map.Entry<String, String> entry : params.entrySet()){
+                String old = map.get(entry.getKey());
+                if(old == null){
+                    map.put(entry.getKey(), entry.getValue());
+                }else if(old.equals(repeat)){ // 重复
+                    continue;
+                }
+                else if(old.equals(entry.getValue())){ //
+                    map.put(entry.getKey(), repeat);
+                }
+            }
+        }
+        // url的参数中，value不重复的字段名
+        List<String> notRepeatKeys = new ArrayList<>();
+        for(Map.Entry<String, String> entry : map.entrySet()){
+            if(!entry.getKey().equals(repeat)){
+                notRepeatKeys.add(entry.getKey());
+            }
+        }
+        m3u8.setSubUrlNotRepeatParamKey(notRepeatKeys);
     }
 
     private static M3u8Key parseKey(String line) {
