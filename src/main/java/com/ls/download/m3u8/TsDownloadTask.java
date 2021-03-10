@@ -2,6 +2,7 @@ package com.ls.download.m3u8;
 
 import com.ls.crawler.HttpClientUtil;
 import com.ls.download.AesUtils;
+import com.ls.download.http.HttpClient;
 import com.ls.http.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ class TsDownloadTask implements Runnable{
     private M3u8Url m3u8Url;
     private String saveDir;
     private String prefixUrl;
+    private HttpClient httpClient;
 
     private String tsPath;
     private String keyPath;
@@ -38,9 +40,13 @@ class TsDownloadTask implements Runnable{
     public void setPrefixUrl(String prefixUrl) {
         this.prefixUrl = prefixUrl;
     }
+    public void setHttpClient(HttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
 
     @Override
     public void run() {
+        logger.info("线程[{}]开始下载：{}", Thread.currentThread().getName(), prefixUrl + m3u8Url.getUrl());
         boolean success = false; // 下载是否成功
         // 下载文件
         try{
@@ -76,18 +82,26 @@ class TsDownloadTask implements Runnable{
         }else{
             mainTask.errorTask(this);
         }
+
+        logger.info("线程[{}]结束下载：{}", Thread.currentThread().getName(), m3u8Url.getUrl());
     }
 
+    /**
+     * 下载解密key
+     */
     private void downloadKeyIfNecessary() {
         // 下载解码文件
         M3u8Key key = m3u8Url.getKey();
+        if(key == null){
+            return;
+        }
 
         byte[] aesKey = null;
         if(StringUtils.equals(key.getMethod(), "AES-128")){
             File file = new File(keyPath);
             if(!file.exists()){
-                aesKey = HttpClientUtil.get(key.getUri(), null, "utf-8");
-                FileUtils.writeToFile(new String(aesKey), keyPath);
+                aesKey = httpClient.getBytes(key.getUri(), null);
+                FileUtils.writeToFile(aesKey, keyPath);
             }
         }
     }
@@ -102,9 +116,9 @@ class TsDownloadTask implements Runnable{
 
         File file = new File(tsPath);
         if(!file.exists() || file.length() == 0){
-            byte[] data = HttpClientUtil.get(prefixUrl + m3u8Url.getUrl(), null, "utf-8");
+            byte[] data = httpClient.getBytes(prefixUrl + m3u8Url.getUrl(), null);
             if(data != null){
-                if(m3u8Url.getKey() == null || M3u8Utils.validTs(data)){
+                if((m3u8Url.getKey() == null && M3u8Utils.validTs(data)) || m3u8Url.getKey() != null){
                     FileOutputStream fos = new FileOutputStream(file);
                     fos.write(data);
                     fos.flush();
@@ -119,8 +133,15 @@ class TsDownloadTask implements Runnable{
         return success;
     }
 
+    /**
+     * 解密ts文件
+     * @throws IOException
+     */
     protected void decryptIfNecessary() throws IOException {
         M3u8Key key = m3u8Url.getKey();
+        if(key == null){
+            return;
+        }
 
         if(StringUtils.equals(key.getMethod(), "AES-128")){
             File file = new File(decryptFilePath);

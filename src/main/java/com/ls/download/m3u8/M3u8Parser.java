@@ -72,7 +72,10 @@ public class M3u8Parser {
 
                     if(!sameTsName){
                         int end = line.indexOf("?");
-                        String tsName = line.substring(0, end);
+                        String tsName = line;
+                        if(end > -1){
+                            tsName = line.substring(0, end);
+                        }
                         if(preTsName == null){
                             preTsName = tsName;
                         }else{

@@ -26,7 +26,11 @@ public class M3u8Utils {
 
         if(!m3u8Url.getM3u8().isHasSameTsName()){
             int end = url.indexOf("?");
-            return url.substring(0, end);
+            if(end > -1){
+                return url.substring(0, end);
+            }else{
+                return url;
+            }
 
         }else{
             List<String> paramKeys = m3u8Url.getM3u8().getSubUrlNotRepeatParamKey();

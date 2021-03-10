@@ -1,6 +1,7 @@
 package com.ls.http;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import ws.schild.jave.*;
 
 import java.io.File;
@@ -14,6 +15,32 @@ public class VideoUtils {
         String cmd = "ffmpeg -f concat -safe 0 -i fileList.txt -c copy output.mp4 -y";
         cmd = cmd.replace("fileList.txt", path + fileListName);
         cmd = cmd.replace("output.mp4", path + mp4Name+".mp4");
+
+        cmd = cmd.replaceAll("\\\\", "/");
+        System.out.println(cmd);
+
+        try {
+            Runtime runtime = Runtime.getRuntime();
+            Process process = runtime.exec(cmd);
+
+            InputStream is = process.getErrorStream();
+            IOUtils.copy(is, System.out);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void concatVideo(String fileListName, String mp4Name){
+        String fileName = FileUtils.getFileNameFromPath(mp4Name);
+        if(fileName.lastIndexOf(".") < 0){
+            mp4Name += ".mp4";
+        }
+
+        // ffmpeg -f concat -safe 0 -i filelist.txt -c copy output.mp4
+        String cmd = "ffmpeg -f concat -safe 0 -i fileList.txt -c copy output.mp4 -y";
+        cmd = cmd.replace("fileList.txt", fileListName);
+        cmd = cmd.replace("output.mp4", mp4Name);
 
         cmd = cmd.replaceAll("\\\\", "/");
         System.out.println(cmd);

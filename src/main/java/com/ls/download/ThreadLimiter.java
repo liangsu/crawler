@@ -75,7 +75,7 @@ public class ThreadLimiter implements Runnable {
 
             if(isLock){
                 final Runnable task = node.r;
-                Downloader.getInstance().submitTask(() ->{
+                Downloader.getInstance().execute(() ->{
                     try{
                         task.run();
                     }finally {

@@ -3,12 +3,9 @@ package com.ls.download;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
-public class Downloader {
+public class Downloader implements Executor {
 
     private final static Logger logger = LoggerFactory.getLogger(Downloader.class);
 
@@ -30,10 +27,6 @@ public class Downloader {
         });
     }
 
-    public void submitTask(Runnable downloadTask){
-        executorService.execute(downloadTask);
-    }
-
     public String getDefaultSaveDirector() {
         return defaultSaveDirector;
     }
@@ -41,5 +34,10 @@ public class Downloader {
     private static Downloader instance = new Downloader();
     public static Downloader getInstance(){
         return instance;
+    }
+
+    @Override
+    public void execute(Runnable command) {
+        executorService.execute(command);
     }
 }

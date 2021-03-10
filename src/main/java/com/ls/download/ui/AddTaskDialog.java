@@ -1,6 +1,7 @@
 package com.ls.download.ui;
 
 import com.ls.download.Downloader;
+import com.ls.download.http.DefaultHttpClient;
 import com.ls.download.m3u8.M3u8DownloadTask;
 
 import javax.swing.*;
@@ -103,6 +104,7 @@ public class AddTaskDialog extends JDialog implements ActionListener {
             String path = this.savePath.getText();
 
             M3u8DownloadTask task = new M3u8DownloadTask(path, url);
+            task.setHttpClient(new DefaultHttpClient(null));
             Downloader.getInstance().submitTask(task);
 
             setVisible(false);

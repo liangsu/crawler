@@ -4,89 +4,80 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 线程限制器
  * 目的：可以用于限制一个网站的连接，最多有多少个线程执行下载任务
  */
-public class ThreadLimiter2 implements Runnable {
-    private Queue<Node> queue = new LinkedBlockingQueue<>();
-    private ConcurrentHashMap<String,Semaphore> semaphoreMap = new ConcurrentHashMap<>();
+public class ThreadLimiter2{
+    private ConcurrentHashMap<String,Node> nodeMap = new ConcurrentHashMap<>();
 
     public void limit(String key, int num){
-        Semaphore semaphore = semaphoreMap.get(key);
-        if(semaphore == null){
-            semaphoreMap.putIfAbsent(key, new Semaphore(num));
+        Node node = nodeMap.get(key);
+        if(node == null){
+            node = new Node(key, new LinkedBlockingQueue(), new Semaphore(num));
+            nodeMap.putIfAbsent(key, node);
         }
     }
 
     public void offer(String key, Runnable r){
-        Semaphore semaphore = semaphoreMap.get(key);
-        if(semaphore == null){
+        Node node = nodeMap.get(key);
+        if(node == null){
             throw new IllegalStateException("not invoke limit method to set limit");
         }
+        node.queue.offer(r);
 
-        queue.offer(new Node(key, r));
+        deliveryTask(node);
+    }
+
+    /**
+     * 投递任务到线程池
+     * @param node
+     */
+    public void deliveryTask(Node node){
+        Queue<Runnable> queue = node.queue;
+        Runnable task;
+        while((task = queue.poll()) != null){
+            if(node.semaphore.tryAcquire()){
+                ReleaseSemphoreTask releaseSemphoreTask = new ReleaseSemphoreTask(node, task);
+                Downloader.getInstance().execute(releaseSemphoreTask);
+            }
+        }
+    }
+
+    private void release(Node node) {
+        node.semaphore.release();
+        deliveryTask(node);
     }
 
     class Node{
         String key;
-        Runnable r;
+        Queue<Runnable> queue;
+        Semaphore semaphore;
 
-        public Node(String key, Runnable r) {
+        public Node(String key, Queue queue, Semaphore semaphore) {
             this.key = key;
-            this.r = r;
+            this.queue = queue;
+            this.semaphore = semaphore;
         }
     }
 
+    class ReleaseSemphoreTask implements Runnable{
+        Node node;
+        Runnable task;
 
-    @Override
-    public void run() {
-        Node pre = null;
-        Node node = null;
-        int repeat = 0;
+        public ReleaseSemphoreTask(Node node, Runnable task) {
+            this.node = node;
+            this.task = task;
+        }
 
-        boolean isLock = false;
-        while((node = queue.poll()) != null){
-            Semaphore semaphore = semaphoreMap.get(node.key);
-
-            if(semaphore.tryAcquire()){
-                isLock = true;
-
-            }else{
-
-                if(pre == node){
-                    repeat++;
-                }else{
-                    repeat = 0;
-                }
-
-                if(repeat >= 5){
-                    try {
-                        if(semaphore.tryAcquire(10, TimeUnit.SECONDS)){
-                            isLock = true;
-                        }
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+        @Override
+        public void run() {
+            try{
+                task.run();
+            }finally {
+                release(node);
             }
-
-            if(isLock){
-                final Runnable task = node.r;
-                Downloader.getInstance().submitTask(() ->{
-                    try{
-                        task.run();
-                    }finally {
-                        semaphore.release();
-                    }
-                });
-            }else{
-                queue.offer(node);
-            }
-            isLock = false;
-            pre = node;
         }
     }
 
